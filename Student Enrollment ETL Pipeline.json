@@ -1,0 +1,237 @@
+{
+  "name": "Student Enrollment ETL Pipeline",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ee533b31-744b-45cc-a837-e5781e7cc735",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fileSelector": "C:\\Users\\chitu\\.n8n-files\\students.csv",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        192,
+        0
+      ],
+      "id": "077bf2f3-4f8d-4a31-a52f-37423c679a93",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        368,
+        0
+      ],
+      "id": "feaa3c81-3daf-4410-93c1-393874904c5a",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const row = item.json;\n\n  const titleCase = value =>\n    String(value ?? '')\n      .trim()\n      .toLowerCase()\n      .replace(/\\b\\w/g, char => char.toUpperCase());\n\n  return {\n    json: {\n      name: titleCase(row.name),\n      email: String(row.email ?? '').trim().toLowerCase(),\n      course: titleCase(row.course),\n      status: String(row.status ?? '').trim().toLowerCase(),\n      'enrolled date': String(row['enrolled date'] ?? '').trim()\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        0
+      ],
+      "id": "3c9a7ef7-57a6-49d2-b262-b82965ccb3d1",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "email",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        528,
+        144
+      ],
+      "id": "7a1b3601-e479-4709-9c04-81153ed6cc36",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "dfbc3545-8fad-4282-90cb-1ce1e19afafe",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "enrolled",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "79c28158-90bd-47f1-87cf-91ca2376fabf",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        528,
+        288
+      ],
+      "id": "5d9fdaca-dcc6-45fb-8334-56ea323b0c79",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        704,
+        288
+      ],
+      "id": "10e8fd8e-36aa-4bd6-87f5-40daffff1d72",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "C:\\Users\\chitu\\.n8n-files\\students_clean.csv",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        864,
+        288
+      ],
+      "id": "1e856ba5-18b0-44ca-b852-281e948b1370",
+      "name": "Read/Write Files from Disk1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "019400fd-85ac-4391-87f5-51d75c6f1062",
+  "meta": {
+    "instanceId": "02bf7f50b1ace73676e27daef9b4197858dd882741efef333027e895acd55419"
+  },
+  "nodeGroups": [],
+  "id": "2EHgyYVD6AEcpszA",
+  "tags": []
+}
